@@ -45,14 +45,14 @@ def TryPassword(password):
     hash.update(bin_salt)
     T = hash.digest()    
 
-    obj = AES.new(T[0:32], AES.MODE_CBC, '\x00'*16)
+    obj = AES.new(T[:32], AES.MODE_CBC, '\x00'*16)
     client_generated_random_salt = obj.decrypt(bin_client_session_key)
 
-    obj = AES.new(T[0:32], AES.MODE_CBC, '\x00'*16)
+    obj = AES.new(T[:32], AES.MODE_CBC, '\x00'*16)
     cryptotext = obj.decrypt(bin_server_session_key)
 
     decryption_key = pbkdf2.PBKDF2(binascii.hexlify(client_generated_random_salt + cryptotext).upper(), bin_PBKDF2Salt, PBKDF2SderCount, hashlib.sha512, hmac).read(32)
-    
+
     #obj = AES.new(decryption_key, AES.MODE_CBC, '\x00'*16)
     #password_net = obj.decrypt(bin_password)
     #print("Decrypted password: %s" %(password_net[16:]))
@@ -60,10 +60,7 @@ def TryPassword(password):
     obj = AES.new(decryption_key, AES.MODE_CBC, '\x00'*16)
     cleartext = obj.decrypt(bin_speedy_key)
 
-    if cleartext[16:] == key_64bytes:
-        return True
-    else:
-        return False
+    return cleartext[16:] == key_64bytes
 
 for candidate_password in passwords:
     if TryPassword(candidate_password):
